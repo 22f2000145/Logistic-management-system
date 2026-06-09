@@ -3,8 +3,7 @@ from application.database import db
 from application.models import User, Role
 from application.resources import *
 from application.config import LocalDevelopmentConfig
-from flask_security import Security, SQLAlchemyUserDatastore
-from flask_security import hash_password
+from flask_security import Security, SQLAlchemyUserDatastore, hash_password
 
 def create_app():
     app = Flask(__name__)
