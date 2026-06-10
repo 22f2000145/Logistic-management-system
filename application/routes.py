@@ -1,7 +1,7 @@
 from application.database import db
 from application.models import User, Role, Transaction
 from flask import current_app as app
-from flask_security import auth_required, roles_required, current_user, hash_password, verify_password
+from flask_security import auth_required, roles_required, current_user, hash_password, verify_password, login_user
 from flask import jsonify, request
 
 @app.route('/', methods=['GET'])
@@ -44,6 +44,11 @@ def user_login():
 
     if user:
         if verify_password(password, user.password):
+            if current_user.is_authenticated:
+                return jsonify({
+                    'message': 'User already logged in'
+                }), 400
+            login_user(user)
             return jsonify({
                 'email': user.email,
                 'username': user.username,
