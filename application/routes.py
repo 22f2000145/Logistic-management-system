@@ -2,13 +2,11 @@ from application.database import db
 from application.models import User, Role, Transaction
 from flask import current_app as app
 from flask_security import auth_required, roles_required, current_user, hash_password, verify_password, login_user
-from flask import jsonify, request
+from flask import jsonify, request, render_template
 
 @app.route('/', methods=['GET'])
 def home():
-    return {
-        'message': 'Welcome to the Flask Security API'
-    }
+    return render_template('index.html')
 
 @app.route('/api/admin')
 @auth_required('token') #authentication required for this route, using token authentication
