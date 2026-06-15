@@ -1,13 +1,60 @@
 export default {
     template: `
     <div class="row border border-black">
-    <div class="col" style="height: 750;">
-        <div class="border mx-auto mt-5" style="height: 400px; width: 200px">
-            login Page
+      <div class="col" style="height: 750px;">
+        <div class="border mx-auto mt-5" style="height: 400px; width: 200px;">
+          <div>
+            <h2 class="text-center">Login Form</h2>
+            <div>
+              <label for="email">Enter Your Email</label>
+              <input type="text" id="email" v-model="formData.email">
+            </div>
+            <div>
+              <label for="password">Enter Your Password</label>
+              <input type="password" id="password" v-model="formData.password">
+            </div>
+            <div>
+              <button class="btn btn-primary" @click="loginUser">Login</button>
+            </div>
+          </div>
         </div>
-
+      </div>
     </div>
-</div>
-
-    `
+  `,
+    data: function () {
+        return {
+            formData: {
+                email: '',
+                password: ''
+            }
+        }
+    },
+    methods: {
+        loginUser: function () {
+            fetch("/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(this.formData) //the content goes to backend in JSON string
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        return response.json().then(err => {
+                            throw new Error(err.message || "Login failed");
+                        });
+                    }
+                })
+                .then(data => {
+                    localStorage.setItem("auth_token", data["auth-token"])
+                    localStorage.setItem("id", data.id);
+                    this.$router.push('/dashboard');
+                })
+                .catch(err => {
+                    alert(err.message);
+                });
+        }
+    }
 }

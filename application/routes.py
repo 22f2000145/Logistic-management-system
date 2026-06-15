@@ -48,6 +48,7 @@ def user_login():
                 }), 400
             login_user(user)
             return jsonify({
+                'id': user.id,
                 'email': user.email,
                 'username': user.username,
                 'auth-token': user.get_auth_token()
