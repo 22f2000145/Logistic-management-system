@@ -1,12 +1,12 @@
 export default {
     template: `
-    <div class="row border border-black">
-    <div class="col">
-        <div class="text-center mt-2">
-         <p> LOGIX | &copy; 2026 | All rights reserved </p>
+    <div class="row g-0 border-top mt-4">
+        <div class="col text-center py-3">
+            <span class="text-secondary" style="font-size: 0.9rem;">
+                logiX | copyright 2025 | created at IIT Madras
+            </span>
         </div>
     </div>
-</div>
     `
 }
 

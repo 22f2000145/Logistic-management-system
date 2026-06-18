@@ -21,7 +21,7 @@ const app = new Vue({
     el: '#app',
     router,
     template: `
-    <div class='container'>
+    <div class="container-fluid px-0">
     <nav-bar></nav-bar>
     <router-view></router-view>
     <foot></foot>
