@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask_restful import Api, Resource, reqparse
 from .models import *
 from flask_security import auth_required, roles_required, roles_accepted, current_user
@@ -15,7 +16,7 @@ parser = reqparse.RequestParser()
 
 parser.add_argument('name')
 parser.add_argument('type')
-parser.add_argument('date')
+# parser.add_argument('date')
 parser.add_argument('source')
 parser.add_argument('destination')
 parser.add_argument('description')
@@ -62,7 +63,7 @@ class TransApi(Resource):
         try:
             transaction = Transaction(name = args["name"],
                                     type = args["type"],
-                                    date = args["date"],
+                                    date = datetime.now(),
                                     source = args["source"],
                                     destination = args['destination'],
                                     description = args['description'],

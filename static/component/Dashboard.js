@@ -38,7 +38,7 @@ export default {
                 <div class="mb-3">
                     <label for="source" class="form-label">Source</label>
                     <select class="form-select" aria-label="Default select example" v-model="transdata.source">
-                        <option selected>City</option>
+                        <option value="" disabled selected hidden>City</option>
                         <option value="Mumbai">Mumbai</option> 
                         <option value="Delhi">Delhi</option>
                         <option value="Chennai">Chennai</option>
@@ -49,7 +49,7 @@ export default {
                 <div class="mb-3">
                     <label for="destination" class="form-label">Destination</label> 
                     <select class="form-select" aria-label="Default select example" v-model="transdata.destination">
-                        <option selected>City</option>
+                        <option value="" disabled selected hidden>City</option>
                         <option value="Mumbai">Mumbai</option>
                         <option value="Delhi">Delhi</option>
                         <option value="Chennai">Chennai</option>
@@ -63,7 +63,7 @@ export default {
                     <input type="text" class="form-control" id="description" v-model="transdata.description">
                 </div>
                 <div class="mb-3 text-end">
-                    <button class="btn btn-primary">Create</button>
+                    <button class="btn btn-primary" @click = "createTrans">Create</button>
                 </div>
             </div>
         </div>
@@ -84,44 +84,118 @@ export default {
         }
     },
     mounted() {
-        fetch('/api/home', {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "Authentication-Token": localStorage.getItem("auth_token")
-            }
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error("Could not fetch user details");
-            })
-            .then(data => {
-                this.userData = data;
-            })
-            .catch(err => {
-                console.log(err);
-            })
-        fetch('/api/get',
-            {
-                method: 'GET',
+        this.loadUser();
+        this.loadTrans();
+    },
+    methods: {
+        loadUser() {
+            fetch('/api/home', {
+                method: "GET",
                 headers: {
                     "Content-Type": "application/json",
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
-            }
-        ).then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-            throw new Error("Could not fetch transactions");
-        })
-            .then(data => {
-                this.transactions = data;
             })
-            .catch(err => {
-                console.log(err);
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error("Could not fetch user details");
+                })
+                .then(data => {
+                    this.userData = data;
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        },
+        loadTrans() {
+            fetch('/api/get',
+                {
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authentication-Token": localStorage.getItem("auth_token")
+                    }
+                }
+            ).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error("Could not fetch transactions");
             })
+                .then(data => {
+                    this.transactions = data;
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        },
+        createTrans() {
+            fetch('/api/create',
+                {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authentication-Token": localStorage.getItem("auth_token")
+                    },
+                    body: JSON.stringify(this.transdata)
+                }
+            ).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error("Could not create transaction");
+            })
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        },
+        loadUser() {
+            fetch('/api/home', {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authentication-Token": localStorage.getItem("auth_token")
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error("Could not fetch user details");
+                })
+                .then(data => {
+                    this.userData = data;
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        },
+        loadTrans() {
+            fetch('/api/get',
+                {
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authentication-Token": localStorage.getItem("auth_token")
+                    }
+                }
+            ).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error("Could not fetch transactions");
+            })
+                .then(data => {
+                    this.transactions = data;
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        },
     }
 }

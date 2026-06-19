@@ -17,6 +17,13 @@ def create_app():
 
 app = create_app()
 
+@app.after_request
+def add_header(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 with app.app_context():
     db.create_all()
     app.security.datastore.find_or_create_role(name='admin', description='Administrator')
