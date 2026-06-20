@@ -52,7 +52,13 @@ export default {
           localStorage.setItem("auth_token", data["auth-token"])
           localStorage.setItem("id", data.id);
           localStorage.setItem("username", data.username);
-          this.$router.push('/dashboard');
+          localStorage.setItem("roles", JSON.stringify(data.roles));
+          if (data.roles && data.roles.includes('admin')) {
+            this.$router.push('/admin');
+          }
+          else if (data.roles && data.roles.includes('user')) {
+            this.$router.push('/dashboard');
+          }
         })
         .catch(err => {
           this.message = err.message;

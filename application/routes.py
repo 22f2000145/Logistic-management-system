@@ -1,8 +1,11 @@
+from flask_security import roles_accepted
 from application.database import db
 from application.models import User, Role, Transaction
 from flask import current_app as app
 from flask_security import auth_required, roles_required, current_user, hash_password, verify_password, login_user
 from flask import jsonify, request, render_template
+from application.utils import roles_list
+
 
 @app.route('/', methods=['GET'])
 def home():
@@ -18,13 +21,13 @@ def admin():
 
 @app.route('/api/home') 
 @auth_required('token') #authentication required for this route, using token authentication
-@roles_required('user') #authorization required for this route, only users with 'user' role can access this route
+@roles_accepted('user','admin') #authorization required for this route, only users with 'user' role can access this route
 def user_home():
     user = current_user
     return jsonify({
         'username': user.username,
         'email': user.email,
-        'password': user.password
+        'roles': roles_list(user.roles)
     })  
 
 @app.route('/api/login', methods=['POST'])
@@ -51,6 +54,7 @@ def user_login():
                 'id': user.id,
                 'email': user.email,
                 'username': user.username,
+                'roles': roles_list(user.roles),
                 'auth-token': user.get_auth_token()
             }), 200
         else:

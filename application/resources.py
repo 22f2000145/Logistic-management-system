@@ -2,14 +2,11 @@ from datetime import datetime
 from flask_restful import Api, Resource, reqparse
 from .models import *
 from flask_security import auth_required, roles_required, roles_accepted, current_user
+from .utils import roles_list
 
 api = Api()
 
-def roles_list(roles):
-    role_list = []
-    for role in roles:
-        role_list.append(role.name)
-    return role_list
+
 
 parser = reqparse.RequestParser()
 
@@ -89,7 +86,7 @@ class TransApi(Resource):
         if trans:
             trans.name = args['name']
             trans.type = args['type']
-            trans.date = args['date']
+            # trans.date = args['date']
             trans.source = args['source']
             trans.destination = args['destination']
             trans.description = args['description']
@@ -103,15 +100,20 @@ class TransApi(Resource):
             }, 404
     
     @auth_required('token')
-    @roles_accepted('admin')
+    @roles_accepted('user', 'admin')
     def delete(self, trans_id):
         trans = Transaction.query.get(trans_id)
         if trans:
-            db.session.delete(trans)
-            db.session.commit()
-            return {
-                "message": "deleted successfully"
-            }, 200
+            if "admin" in roles_list(current_user.roles) or trans.user_id == current_user.id:
+                db.session.delete(trans)
+                db.session.commit()
+                return {
+                    "message": "deleted successfully"
+                }, 200
+            else:
+                return {
+                    "message": "unauthorized"
+                }, 403
         else:
             return {
                 "message": "transaction not found"

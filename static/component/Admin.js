@@ -4,25 +4,69 @@ export default {
         <h2>Welcome, {{userData.username || localUsername}}!</h2>
         <div class="row border">
             <div class="col-8 border" style="height: 750px; overflow-y: auto;">
-                <h2>Your Transactions</h2>
-                <div v-for="t in transactions" class="card" style="border: 1px solid black; margin: 10px;">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ t.name }} <span class="badge text-white bg-warning">{{ t.internal_status }}</span></h5>
-                        <p class="card-text">Created at: {{ t.date }}</p>
-                        <p v-if="t.internal_status == 'paid'" class="card-text">Delivery: {{ t.delivery }}</p>
-                        <p v-if="t.internal_status == 'paid'" class="card-text">Delivery: {{ t.delivery_status }}</p>
-                        <p class="card-text">About: {{ t.description }}</p>
-                        <p class="card-text">From {{ t.source }} to {{ t.destination }}</p>
-                        <div v-if="t.internal_status == 'pending'">
-                            <p class="card-text">Amount: {{ t.amount }}</p>
-                            <button class="btn btn-primary" @click="payTrans(t.id)">Pay now </button>
-                        </div> 
-                        <div v-if="t.internal_status == 'requested'">
-                            <router-link :to="{name: 'Update', params: {id: t.id}}" class="btn btn-warning">Update</router-link>
-                            <button class="btn btn-danger" @click="deleteTrans(t.id)">Delete</button>
-                        </div>
-                    </div>
-                </div>
+                <h2>Requested Transactions</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Source</th>
+                            <th>Destination</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="t in transactions" v-if="t.internal_status == 'requested'">
+                            <td>{{ t.name }}</td>
+                            <td>{{ t.type }}</td>
+                            <td>{{ t.source }}</td>
+                            <td>{{ t.destination }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Pending Transactions</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Source</th>
+                            <th>Destination</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="t in transactions" v-if="t.internal_status == 'pending'">
+                            <td>{{ t.name }}</td>
+                            <td>{{ t.type }}</td>
+                            <td>{{ t.source }}</td>
+                            <td>{{ t.destination }}</td>
+                            <td>{{ t.amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Paid Transactions</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Source</th>
+                            <th>Destination</th>
+                            <th>Delivery</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="t in transactions" v-if="t.internal_status == 'paid'">
+                            <td>{{ t.name }}</td>
+                            <td>{{ t.type }}</td>
+                            <td>{{ t.source }}</td>
+                            <td>{{ t.destination }}</td>
+                            <td>{{ t.delivery }}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="col-4 border" style="min-height: 750px;">
                 <h2>Create Transaction</h2>
@@ -63,9 +107,9 @@ export default {
                     <input type="text" class="form-control" id="description" v-model="transdata.description">
                 </div>
                 <div class="mb-3 text-end">
-                    <button class="btn btn-primary" @click="createTrans" :disabled="isSubmitting">
-                        <span v-if="isSubmitting">Creating</span>
-                        <span v-else>Create</span>
+                    <button class="btn btn-primary" @click="review" :disabled="isSubmitting">
+                        <span v-if="isSubmitting">reviewing</span>
+                        <span v-else>review</span>
                     </button>
                 </div>
             </div>
@@ -135,47 +179,8 @@ export default {
                     console.log(err);
                 })
         },
-        createTrans() {
-            this.isSubmitting = true;
-            fetch('/api/create',
-                {
-                    method: 'POST',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authentication-Token": localStorage.getItem("auth_token")
-                    },
-                    body: JSON.stringify(this.transdata)
-                }
-            ).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                return response.json().then(err => {
-                    throw new Error(err.message || "Could not create transaction");
-                });
-            })
-                .then(data => {
-                    console.log(data);
-                    alert(data.message || "Transaction created successfully!");
-                    // Reset fields
-                    this.transdata.name = "";
-                    this.transdata.type = "";
-                    this.transdata.source = "";
-                    this.transdata.destination = "";
-                    this.transdata.description = "";
-                    // Reload transaction list
-                    this.loadTrans();
-                })
-                .catch(err => {
-                    console.log(err);
-                    alert(err.message || "Failed to create transaction.");
-                })
-                .finally(() => {
-                    this.isSubmitting = false;
-                });
-        },
-        payTrans(id) {
-            fetch(`/api/pay/${id}`, {
+        loadUser() {
+            fetch('/api/home', {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -186,42 +191,39 @@ export default {
                     if (response.ok) {
                         return response.json();
                     }
-                    throw new Error("Payment failed.");
+                    throw new Error("Could not fetch user details");
                 })
                 .then(data => {
-                    alert(data.message || "Payment successful!");
-                    this.loadTrans();
+                    this.userData = data;
                 })
                 .catch(err => {
                     console.log(err);
-                    alert(err.message);
-                });
+                })
         },
-        deleteTrans(id) {
-            if (!confirm("Are you sure you want to delete this transaction?")) {
-                return;
-            }
-            fetch(`/api/delete/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authentication-Token": localStorage.getItem("auth_token")
-                }
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
+        loadTrans() {
+            fetch('/api/get',
+                {
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authentication-Token": localStorage.getItem("auth_token")
                     }
-                    throw new Error("Deletion failed.");
-                })
+                }
+            ).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error("Could not fetch transactions");
+            })
                 .then(data => {
-                    alert(data.message || "Transaction deleted successfully!");
-                    this.loadTrans();
+                    this.transactions = data;
                 })
                 .catch(err => {
                     console.log(err);
-                    alert(err.message);
-                });
+                })
+        },
+        review() {
+
         }
     }
 }
