@@ -50,9 +50,17 @@ export default {
             }
         },
         logout() {
-            localStorage.clear();
-            this.updateState();
-            this.$router.push('/login');
+            fetch('/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authentication-Token': localStorage.getItem('auth_token') || ''
+                }
+            }).finally(() => {
+                localStorage.clear();
+                this.updateState();
+                this.$router.push('/login');
+            });
         }
     }
 }

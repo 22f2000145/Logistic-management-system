@@ -2,7 +2,7 @@ from flask_security import roles_accepted
 from application.database import db
 from application.models import User, Role, Transaction
 from flask import current_app as app
-from flask_security import auth_required, roles_required, current_user, hash_password, verify_password, login_user
+from flask_security import auth_required, roles_required, current_user, hash_password, verify_password, login_user, logout_user
 from flask import jsonify, request, render_template
 from application.utils import roles_list
 
@@ -46,9 +46,7 @@ def user_login():
     if user:
         if verify_password(password, user.password):
             if current_user.is_authenticated:
-                return jsonify({
-                    'message': 'User already logged in'
-                }), 400
+                logout_user()
             login_user(user)
             return jsonify({
                 'id': user.id,
@@ -82,6 +80,13 @@ def create_user():
     return jsonify({
         'message': 'User already exists'
     }), 400
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    logout_user()
+    return jsonify({
+        'message': 'Logged out successfully'
+    }), 200
 
 @app.route('/api/pay/<int:trans_id>')
 @auth_required('token')

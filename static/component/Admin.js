@@ -8,18 +8,24 @@ export default {
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>Created At</th>
                             <th>Name</th>
                             <th>Type</th>
                             <th>Source</th>
                             <th>Destination</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="t in transactions" v-if="t.internal_status == 'requested'">
+                            <td>{{ t.date.substring(0, 10) }}</td>
                             <td>{{ t.name }}</td>
                             <td>{{ t.type }}</td>
                             <td>{{ t.source }}</td>
                             <td>{{ t.destination }}</td>
+                            <td>
+                                <button class="btn btn-success">Review</button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -28,20 +34,27 @@ export default {
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>Created At</th>
                             <th>Name</th>
                             <th>Type</th>
                             <th>Source</th>
                             <th>Destination</th>
                             <th>Amount</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="t in transactions" v-if="t.internal_status == 'pending'">
+                            <td>{{ t.date.substring(0, 10) }}</td>
                             <td>{{ t.name }}</td>
                             <td>{{ t.type }}</td>
                             <td>{{ t.source }}</td>
                             <td>{{ t.destination }}</td>
                             <td>{{ t.amount }}</td>
+                            <td>
+                                <button class="btn btn-success">Accept</button>
+                                <button class="btn btn-danger">Reject</button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -50,20 +63,38 @@ export default {
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>Created At</th>
                             <th>Name</th>
                             <th>Type</th>
                             <th>Source</th>
                             <th>Destination</th>
-                            <th>Delivery</th>
+                            <th>Delivery Status</th>
+                            <th>Date of Delivery</th>
+                            <th>Update Delivery Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="t in transactions" v-if="t.internal_status == 'paid'">
+                            <td>{{ t.date.substring(0, 10) }}</td>
                             <td>{{ t.name }}</td>
                             <td>{{ t.type }}</td>
                             <td>{{ t.source }}</td>
                             <td>{{ t.destination }}</td>
+                            <td>{{ t.delivery_status }}</td>
                             <td>{{ t.delivery }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <select class="form-select" aria-label="Default select example" v-model="t.delivery_status">
+                                        <option value="" disabled selected hidden>Select</option>
+                                        <option value="in-process">In Process</option>
+                                        <option value="in-transit">In Transit</option>
+                                        <option value="dispatched">Dispatched</option>
+                                        <option value="out-for-delivery">Out for Delivery</option>
+                                        <option value="delivered">Delivered</option>
+                                    </select>
+                                    <button class="btn btn-success" @click="update(t.id)">Update</button>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -224,6 +255,32 @@ export default {
         },
         review() {
 
+        },
+        update(id) {
+            const trans = this.transactions.find(t => t.id === id);
+            if (!trans) return;
+            fetch(`/api/deliver/${id}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authentication-Token": localStorage.getItem("auth_token")
+                },
+                body: JSON.stringify({ status: trans.delivery_status })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error("Could not update status");
+                })
+                .then(data => {
+                    alert(data.message || "Status updated successfully!");
+                    this.loadTrans();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert(err.message || "Failed to update status");
+                });
         }
     }
 }
