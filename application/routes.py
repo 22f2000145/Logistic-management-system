@@ -90,7 +90,7 @@ def logout():
 
 @app.route('/api/pay/<int:trans_id>')
 @auth_required('token')
-@roles_required('user')
+@roles_accepted('user', 'admin')
 def payment(trans_id):
     transaction = Transaction.query.get(trans_id)
     if transaction:

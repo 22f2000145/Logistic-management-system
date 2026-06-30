@@ -5,21 +5,21 @@ export default {
         <div class="row border">
             <div class="col-8 border" style="height: 750px; overflow-y: auto;">
                 <h2>Your Transactions</h2>
-                <div v-for="t in transactions" class="card" style="border: 1px solid black; margin: 10px;">
+                <div v-for="temp in transactions" class="card" style="border: 1px solid black; margin: 10px;">
                     <div class="card-body">
-                        <h5 class="card-title">{{ t.name }} <span class="badge text-white bg-warning">{{ t.internal_status }}</span></h5>
-                        <p class="card-text">Created at: {{ t.date }}</p>
-                        <p v-if="t.internal_status == 'paid'" class="card-text">Delivery: {{ t.delivery }}</p>
-                        <p v-if="t.internal_status == 'paid'" class="card-text">Delivery: {{ t.delivery_status }}</p>
-                        <p class="card-text">About: {{ t.description }}</p>
-                        <p class="card-text">From {{ t.source }} to {{ t.destination }}</p>
-                        <div v-if="t.internal_status == 'pending'">
-                            <p class="card-text">Amount: {{ t.amount }}</p>
-                            <button class="btn btn-primary" @click="payTrans(t.id)">Pay now </button>
+                        <h5 class="card-title">{{ temp.name }} <span class="badge text-white bg-warning">{{ temp.internal_status }}</span></h5>
+                        <p class="card-text">Created at: {{ temp.date }}</p>
+                        <p v-if="temp.internal_status == 'paid'" class="card-text">Delivery: {{ temp.delivery }}</p>
+                        <p v-if="temp.internal_status == 'paid'" class="card-text">Delivery: {{ temp.delivery_status }}</p>
+                        <p class="card-text">About: {{ temp.description }}</p>
+                        <p class="card-text">From {{ temp.source }} to {{ temp.destination }}</p>
+                        <div v-if="temp.internal_status == 'pending'">
+                            <p class="card-text">Amount: {{ temp.amount }}</p>
+                            <button class="btn btn-primary" @click="payTrans(temp.id)">Pay now </button>
                         </div> 
-                        <div v-if="t.internal_status == 'requested'">
-                            <router-link :to="{name: 'Update', params: {id: t.id}}" class="btn btn-warning">Update</router-link>
-                            <button class="btn btn-danger" @click="deleteTrans(t.id)">Delete</button>
+                        <div v-if="temp.internal_status == 'requested'">
+                            <router-link :to="{name: 'Update', params: {id: temp.id}}" class="btn btn-warning">Update</router-link>
+                            <button class="btn btn-danger" @click="deleteTrans(temp.id)">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -28,39 +28,39 @@ export default {
                 <h2>Create Transaction</h2>
                 <div class="mb-3">
                     <label for="name" class="form-label">Transaction Name</label>
-                    <input type="text" class="form-control" id="name" v-model="transdata.name">
+                    <input type="text" class="form-control" id="name" v-model="t.name">
                 </div>
                 <div class="mb-3">
                     <label for="type" class="form-label">Transaction Type</label>
-                    <input type="text" class="form-control" id="type" v-model="transdata.type">
+                    <input type="text" class="form-control" id="type" v-model="t.type">
                 </div>
                 <div class="d-flex"> 
-                <div class="mb-3">
-                    <label for="source" class="form-label">Source</label>
-                    <select class="form-select" aria-label="Default select example" v-model="transdata.source">
-                        <option value="" disabled selected hidden>City</option>
-                        <option value="Mumbai">Mumbai</option> 
-                        <option value="Delhi">Delhi</option>
-                        <option value="Chennai">Chennai</option>
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="destination" class="form-label">Destination</label> 
-                    <select class="form-select" aria-label="Default select example" v-model="transdata.destination">
-                        <option value="" disabled selected hidden>City</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Chennai">Chennai</option>
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                    </select>
-                </div>
+                    <div class="mb-3">
+                        <label for="source" class="form-label">Source</label>
+                        <select class="form-select" aria-label="Default select example" v-model="t.source">
+                            <option value="" disabled selected hidden>City</option>
+                            <option value="Mumbai">Mumbai</option> 
+                            <option value="Delhi">Delhi</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Kolkata">Kolkata</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="destination" class="form-label">Destination</label> 
+                        <select class="form-select" aria-label="Default select example" v-model="t.destination">
+                            <option value="" disabled selected hidden>City</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Kolkata">Kolkata</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                        </select>
+                    </div>
                 </div> 
                 <div class="mb-4">
                     <label for="description" class="form-label">Description</label>
-                    <input type="text" class="form-control" id="description" v-model="transdata.description">
+                    <input type="text" class="form-control" id="description" v-model="t.description">
                 </div>
                 <div class="mb-3 text-end">
                     <button class="btn btn-primary" @click="createTrans" :disabled="isSubmitting">
@@ -78,7 +78,7 @@ export default {
             localUsername: localStorage.getItem("username"),
             transactions: null,
             isSubmitting: false,
-            transdata: {
+            t: {
                 name: "",
                 type: "",
                 source: "",
@@ -90,6 +90,12 @@ export default {
     mounted() {
         this.loadUser();
         this.loadTrans();
+        this.polling = setInterval(() => {
+            this.loadTrans();
+        }, 10000);
+    },
+    beforeDestroy() {
+        clearInterval(this.polling);
     },
     methods: {
         loadUser() {
@@ -100,79 +106,39 @@ export default {
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error("Could not fetch user details");
-                })
+                .then(response => response.json())
                 .then(data => {
                     this.userData = data;
                 })
-                .catch(err => {
-                    console.log(err);
-                })
         },
         loadTrans() {
-            fetch('/api/get',
-                {
-                    method: 'GET',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authentication-Token": localStorage.getItem("auth_token")
-                    }
+            fetch('/api/get', {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authentication-Token": localStorage.getItem("auth_token")
                 }
-            ).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error("Could not fetch transactions");
             })
+                .then(response => response.json())
                 .then(data => {
                     this.transactions = data;
                 })
-                .catch(err => {
-                    console.log(err);
-                })
         },
         createTrans() {
-            this.isSubmitting = true;
-            fetch('/api/create',
-                {
-                    method: 'POST',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authentication-Token": localStorage.getItem("auth_token")
-                    },
-                    body: JSON.stringify(this.transdata)
-                }
-            ).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                return response.json().then(err => {
-                    throw new Error(err.message || "Could not create transaction");
-                });
+            fetch('/api/create', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authentication-Token": localStorage.getItem("auth_token")
+                },
+                body: JSON.stringify(this.t)
             })
+                .then(response => response.json())
                 .then(data => {
-                    console.log(data);
-                    alert(data.message || "Transaction created successfully!");
-                    // Reset fields
-                    this.transdata.name = "";
-                    this.transdata.type = "";
-                    this.transdata.source = "";
-                    this.transdata.destination = "";
-                    this.transdata.description = "";
-                    // Reload transaction list
-                    this.loadTrans();
+                    console.log(data)
+                    this.t = { name: "", type: "", source: "", destination: "", description: "" }
+                    this.loadTrans()
                 })
-                .catch(err => {
-                    console.log(err);
-                    alert(err.message || "Failed to create transaction.");
-                })
-                .finally(() => {
-                    this.isSubmitting = false;
-                });
         },
         payTrans(id) {
             fetch(`/api/pay/${id}`, {
@@ -182,25 +148,13 @@ export default {
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error("Payment failed.");
-                })
+                .then(response => response.json())
                 .then(data => {
-                    alert(data.message || "Payment successful!");
-                    this.loadTrans();
+                    console.log(data)
+                    this.loadTrans()
                 })
-                .catch(err => {
-                    console.log(err);
-                    alert(err.message);
-                });
         },
         deleteTrans(id) {
-            if (!confirm("Are you sure you want to delete this transaction?")) {
-                return;
-            }
             fetch(`/api/delete/${id}`, {
                 method: "DELETE",
                 headers: {
@@ -208,20 +162,11 @@ export default {
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error("Deletion failed.");
-                })
+                .then(response => response.json())
                 .then(data => {
-                    alert(data.message || "Transaction deleted successfully!");
-                    this.loadTrans();
+                    console.log(data)
+                    this.loadTrans()
                 })
-                .catch(err => {
-                    console.log(err);
-                    alert(err.message);
-                });
         }
     }
 }

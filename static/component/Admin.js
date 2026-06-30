@@ -17,14 +17,14 @@ export default {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="t in transactions" v-if="t.internal_status == 'requested'">
-                            <td>{{ t.date.substring(0, 10) }}</td>
-                            <td>{{ t.name }}</td>
-                            <td>{{ t.type }}</td>
-                            <td>{{ t.source }}</td>
-                            <td>{{ t.destination }}</td>
+                        <tr v-for="temp in transactions" v-if="temp.internal_status == 'requested'">
+                            <td>{{ temp.date ? temp.date.substring(0, 10) : '' }}</td>
+                            <td>{{ temp.name }}</td>
+                            <td>{{ temp.type }}</td>
+                            <td>{{ temp.source }}</td>
+                            <td>{{ temp.destination }}</td>
                             <td>
-                                <button class="btn btn-success">Review</button>
+                                <button class="btn btn-success" @click="selectForReview(temp)">Review</button>
                             </td>
                         </tr>
                     </tbody>
@@ -44,16 +44,16 @@ export default {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="t in transactions" v-if="t.internal_status == 'pending'">
-                            <td>{{ t.date.substring(0, 10) }}</td>
-                            <td>{{ t.name }}</td>
-                            <td>{{ t.type }}</td>
-                            <td>{{ t.source }}</td>
-                            <td>{{ t.destination }}</td>
-                            <td>{{ t.amount }}</td>
+                        <tr v-for="temp in transactions" v-if="temp.internal_status == 'pending'">
+                            <td>{{ temp.date ? temp.date.substring(0, 10) : '' }}</td>
+                            <td>{{ temp.name }}</td>
+                            <td>{{ temp.type }}</td>
+                            <td>{{ temp.source }}</td>
+                            <td>{{ temp.destination }}</td>
+                            <td>{{ temp.amount }}</td>
                             <td>
-                                <button class="btn btn-success">Accept</button>
-                                <button class="btn btn-danger">Reject</button>
+                                <button class="btn btn-success" @click="acceptTrans(temp.id)">Accept</button>
+                                <button class="btn btn-danger" @click="rejectTrans(temp.id)">Reject</button>
                             </td>
                         </tr>
                     </tbody>
@@ -74,17 +74,17 @@ export default {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="t in transactions" v-if="t.internal_status == 'paid'">
-                            <td>{{ t.date.substring(0, 10) }}</td>
-                            <td>{{ t.name }}</td>
-                            <td>{{ t.type }}</td>
-                            <td>{{ t.source }}</td>
-                            <td>{{ t.destination }}</td>
-                            <td>{{ t.delivery_status }}</td>
-                            <td>{{ t.delivery }}</td>
+                        <tr v-for="temp in transactions" v-if="temp.internal_status == 'paid'">
+                            <td>{{ temp.date ? temp.date.substring(0, 10) : '' }}</td>
+                            <td>{{ temp.name }}</td>
+                            <td>{{ temp.type }}</td>
+                            <td>{{ temp.source }}</td>
+                            <td>{{ temp.destination }}</td>
+                            <td><span class="badge bg-success">{{ temp.delivery_status || 'Pending' }}</span></td>
+                            <td>{{ temp.delivery }}</td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <select class="form-select" aria-label="Default select example" v-model="t.delivery_status">
+                                    <select class="form-select" aria-label="Default select example" v-model="temp.new_status">
                                         <option value="" disabled selected hidden>Select</option>
                                         <option value="in-process">In Process</option>
                                         <option value="in-transit">In Transit</option>
@@ -92,56 +92,54 @@ export default {
                                         <option value="out-for-delivery">Out for Delivery</option>
                                         <option value="delivered">Delivered</option>
                                     </select>
-                                    <button class="btn btn-success" @click="update(t.id)">Update</button>
+                                    <button class="btn btn-success" @click="update(temp.id)">Update</button>
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div class="col-4 border" style="min-height: 750px;">
-                <h2>Create Transaction</h2>
-                <div class="mb-3">
-                    <label for="name" class="form-label">Transaction Name</label>
-                    <input type="text" class="form-control" id="name" v-model="transdata.name">
+            <div class="col-4 border" style="min-height: 750px; padding: 15px;">
+                <div v-if="t.id">
+                    <h2>Review Transaction</h2>
+                    <div v-if="reviewed">
+                        <p class="text-success fw-bold">Transaction reviewed successfully!</p>
+                        <button class="btn btn-secondary" @click="clearReview">Clear</button>
+                    </div>
+                    <div v-else class="mb-3">
+                        <p class="fs-5 fw-bold mb-1">Transaction name</p>
+                        <p class="border p-2 bg-light rounded">{{ t.name }}</p>
+                    </div>
+
+                    <div class="mb-3"> 
+                        <p class="fs-5 fw-bold mb-1">Transaction type</p>
+                        <p class="border p-2 bg-light rounded">{{ t.type }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <p class="fs-5 fw-bold mb-1">Transaction route</p>
+                        <p class="border p-2 bg-light rounded">{{ t.source }} to {{ t.destination }}</p>
+                    </div>  
+                    
+                    <div class="mb-3">
+                        <label for="delivery" class="form-label fw-bold">Delivery Date</label>
+                        <input type="date" class="form-control" id="delivery" v-model="t.delivery">  
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="amount" class="form-label fw-bold">Amount</label>
+                        <input type="number" class="form-control" id="amount" v-model="t.amount">  
+                    </div>
+                    <div class="mb-3 text-end">
+                        <button class="btn btn-secondary me-2" @click="clearReview">Cancel</button>
+                        <button class="btn btn-primary" @click="save(t.id)" :disabled="isSubmitting">
+                            <span v-if="isSubmitting">saving</span>
+                            <span v-else>Save</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="type" class="form-label">Transaction Type</label>
-                    <input type="text" class="form-control" id="type" v-model="transdata.type">
-                </div>
-                <div class="d-flex"> 
-                <div class="mb-3">
-                    <label for="source" class="form-label">Source</label>
-                    <select class="form-select" aria-label="Default select example" v-model="transdata.source">
-                        <option value="" disabled selected hidden>City</option>
-                        <option value="Mumbai">Mumbai</option> 
-                        <option value="Delhi">Delhi</option>
-                        <option value="Chennai">Chennai</option>
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="destination" class="form-label">Destination</label> 
-                    <select class="form-select" aria-label="Default select example" v-model="transdata.destination">
-                        <option value="" disabled selected hidden>City</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Chennai">Chennai</option>
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                    </select>
-                </div>
-                </div> 
-                <div class="mb-4">
-                    <label for="description" class="form-label">Description</label>
-                    <input type="text" class="form-control" id="description" v-model="transdata.description">
-                </div>
-                <div class="mb-3 text-end">
-                    <button class="btn btn-primary" @click="review" :disabled="isSubmitting">
-                        <span v-if="isSubmitting">reviewing</span>
-                        <span v-else>review</span>
-                    </button>
+                <div v-else class="text-center mt-5 text-muted">
+                    <p class="fs-5">Select a transaction from the table to review.</p>
                 </div>
             </div>
         </div>
@@ -152,13 +150,17 @@ export default {
             userData: "",
             localUsername: localStorage.getItem("username"),
             transactions: null,
+            reviewed: false,
             isSubmitting: false,
-            transdata: {
+            t: {
+                id: null,
                 name: "",
                 type: "",
                 source: "",
                 destination: "",
-                description: ""
+                description: "",
+                amount: "",
+                delivery: ""
             }
         }
     },
@@ -175,112 +177,108 @@ export default {
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error("Could not fetch user details");
-                })
+                .then(response => response.json())
                 .then(data => {
                     this.userData = data;
                 })
-                .catch(err => {
-                    console.log(err);
-                })
         },
         loadTrans() {
-            fetch('/api/get',
-                {
-                    method: 'GET',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authentication-Token": localStorage.getItem("auth_token")
-                    }
-                }
-            ).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error("Could not fetch transactions");
-            })
-                .then(data => {
-                    this.transactions = data;
-                })
-                .catch(err => {
-                    console.log(err);
-                })
-        },
-        loadUser() {
-            fetch('/api/home', {
-                method: "GET",
+            fetch('/api/get', {
+                method: 'GET',
                 headers: {
                     "Content-Type": "application/json",
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error("Could not fetch user details");
-                })
-                .then(data => {
-                    this.userData = data;
-                })
-                .catch(err => {
-                    console.log(err);
-                })
-        },
-        loadTrans() {
-            fetch('/api/get',
-                {
-                    method: 'GET',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authentication-Token": localStorage.getItem("auth_token")
-                    }
-                }
-            ).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error("Could not fetch transactions");
-            })
+                .then(response => response.json())
                 .then(data => {
                     this.transactions = data;
                 })
-                .catch(err => {
-                    console.log(err);
-                })
         },
-        review() {
-
+        selectForReview(transaction) {
+            this.reviewed = false;
+            this.t = { ...transaction };
+        },
+        clearReview() {
+            this.reviewed = false;
+            this.t = {
+                id: null,
+                name: "",
+                type: "",
+                source: "",
+                destination: "",
+                description: "",
+                amount: "",
+                delivery: ""
+            };
+        },
+        review(temp) {
+            this.t.name = temp.name;
+            this.t.type = temp.type;
+            this.t.source = temp.source;
+            this.t.destination = temp.destination;
+            this.t.delivery = temp.delivery;
+            this.t.amount = temp.amount;
         },
         update(id) {
             const trans = this.transactions.find(t => t.id === id);
-            if (!trans) return;
             fetch(`/api/deliver/${id}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authentication-Token": localStorage.getItem("auth_token")
                 },
-                body: JSON.stringify({ status: trans.delivery_status })
+                body: JSON.stringify({ status: trans.new_status || trans.delivery_status })
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error("Could not update status");
-                })
+                .then(response => response.json())
                 .then(data => {
-                    alert(data.message || "Status updated successfully!");
-                    this.loadTrans();
+                    console.log(data)
+                    this.loadTrans()
                 })
-                .catch(err => {
-                    console.error(err);
-                    alert(err.message || "Failed to update status");
-                });
+        },
+        save(id) {
+            fetch(`/api/review/${id}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authentication-Token": localStorage.getItem("auth_token")
+                },
+                body: JSON.stringify(this.t)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    this.loadTrans()
+                    this.clearReview()
+                })
+        },
+        acceptTrans(id) {
+            fetch(`/api/pay/${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authentication-Token": localStorage.getItem("auth_token")
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    this.loadTrans()
+                })
+        },
+        rejectTrans(id) {
+            fetch(`/api/delete/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authentication-Token": localStorage.getItem("auth_token")
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    this.loadTrans()
+                })
         }
     }
 }

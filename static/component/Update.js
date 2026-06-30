@@ -7,16 +7,16 @@ export default {
                 <h2>Update Transaction</h2>
                 <div class="mb-3">
                     <label for="name" class="form-label">Transaction Name</label>
-                    <input type="text" class="form-control" id="name" v-model="transdata.name">
+                    <input type="text" class="form-control" id="name" v-model="t.name">
                 </div>
                 <div class="mb-3">
                     <label for="type" class="form-label">Transaction Type</label>
-                    <input type="text" class="form-control" id="type" v-model="transdata.type">
+                    <input type="text" class="form-control" id="type" v-model="t.type">
                 </div>
                 <div class="d-flex"> 
                     <div class="mb-3">
                         <label for="source" class="form-label">Source</label>
-                        <select class="form-select" aria-label="Default select example" v-model="transdata.source">
+                        <select class="form-select" aria-label="Default select example" v-model="t.source">
                             <option value="" disabled selected hidden>City</option>
                             <option value="Mumbai">Mumbai</option> 
                             <option value="Delhi">Delhi</option>
@@ -27,7 +27,7 @@ export default {
                     </div>
                     <div class="mb-3">
                         <label for="destination" class="form-label">Destination</label> 
-                        <select class="form-select" aria-label="Default select example" v-model="transdata.destination">
+                        <select class="form-select" aria-label="Default select example" v-model="t.destination">
                             <option value="" disabled selected hidden>City</option>
                             <option value="Mumbai">Mumbai</option>
                             <option value="Delhi">Delhi</option>
@@ -39,7 +39,7 @@ export default {
                 </div> 
                 <div class="mb-4">
                     <label for="description" class="form-label">Description</label>
-                    <input type="text" class="form-control" id="description" v-model="transdata.description">
+                    <input type="text" class="form-control" id="description" v-model="t.description">
                 </div>
                 <div class="mb-3 text-end">
                     <button class="btn btn-warning" @click="updateTrans" :disabled="isSubmitting">
@@ -55,7 +55,7 @@ export default {
     data: function () {
         return {
             isSubmitting: false,
-            transdata: {
+            t: {
                 name: "",
                 type: "",
                 source: "",
@@ -77,28 +77,19 @@ export default {
                     "Authentication-Token": localStorage.getItem("auth_token")
                 }
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error("Could not fetch transaction details");
-                })
-                .then(data => {
-                    const match = data.find(t => t.id == transId);
-                    if (match) {
-                        this.transdata.name = match.name;
-                        this.transdata.type = match.type;
-                        this.transdata.source = match.source;
-                        this.transdata.destination = match.destination;
-                        this.transdata.description = match.description;
-                    }
-                })
-                .catch(err => {
-                    console.log(err);
-                });
+            .then(response => response.json())
+            .then(data => {
+                const match = data.find(item => item.id == transId);
+                if (match) {
+                    this.t.name = match.name;
+                    this.t.type = match.type;
+                    this.t.source = match.source;
+                    this.t.destination = match.destination;
+                    this.t.description = match.description;
+                }
+            })
         },
         updateTrans() {
-            this.isSubmitting = true;
             const transId = this.$route.params.id;
             fetch(`/api/update/${transId}`, {
                 method: 'PUT',
@@ -106,27 +97,13 @@ export default {
                     "Content-Type": "application/json",
                     "Authentication-Token": localStorage.getItem("auth_token")
                 },
-                body: JSON.stringify(this.transdata)
+                body: JSON.stringify(this.t)
             })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    return response.json().then(err => {
-                        throw new Error(err.message || "Could not update transaction");
-                    });
-                })
-                .then(data => {
-                    alert(data.message || "Transaction updated successfully!");
-                    this.$router.push('/dashboard');
-                })
-                .catch(err => {
-                    console.log(err);
-                    alert(err.message || "Failed to update transaction.");
-                })
-                .finally(() => {
-                    this.isSubmitting = false;
-                });
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                this.$router.push('/dashboard')
+            })
         }
     }
 }
